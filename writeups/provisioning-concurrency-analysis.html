@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provisioning Concurrency Analysis | Cameron Harris</title>
+  <meta name="description" content="Workflow optimization writeup by Cameron Harris on provisioning concurrency, overlap, and repeated process efficiency.">
+  <link rel="icon" type="image/svg+xml" href="../images/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@400;500;700&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="theme-gallery">
+  <main class="page-shell">
+    <nav class="topbar topbar-sticky">
+      <div class="brand-lockup">
+        <span class="brand brand-logo" aria-label="CH logo">CH</span>
+        <div class="brand-socials" aria-label="Social links">
+          <a class="brand-social icon-linkedin" href="https://www.linkedin.com/in/cameron-harris-937b9617b/" target="_blank" rel="noreferrer noopener" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6.94 8.5V19H3.5V8.5h3.44ZM7.16 5.26c0 1.01-.76 1.82-1.94 1.82h-.02c-1.13 0-1.9-.81-1.9-1.82 0-1.03.79-1.82 1.94-1.82s1.89.79 1.92 1.82ZM20.5 12.58V19h-3.43v-6.02c0-1.51-.54-2.54-1.89-2.54-1.03 0-1.64.69-1.91 1.36-.1.24-.12.57-.12.91V19H9.71s.04-9.76 0-10.5h3.44v1.49c.46-.71 1.27-1.71 3.09-1.71 2.25 0 3.94 1.47 3.94 4.63Z"/>
+            </svg>
+          </a>
+          <a class="brand-social icon-github" href="https://github.com/Cameron831" target="_blank" rel="noreferrer noopener" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 .5C5.65.5.5 5.66.5 12.02c0 5.09 3.29 9.4 7.86 10.93.57.11.78-.25.78-.55 0-.27-.01-.99-.02-1.95-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.97.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.27 1.19-3.07-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.19 1.17a11.1 11.1 0 0 1 5.8 0c2.21-1.48 3.18-1.17 3.18-1.17.64 1.58.24 2.75.12 3.04.74.8 1.18 1.82 1.18 3.07 0 4.41-2.68 5.38-5.24 5.67.41.36.78 1.08.78 2.18 0 1.58-.02 2.85-.02 3.24 0 .3.2.67.79.55 4.56-1.53 7.84-5.84 7.84-10.93C23.5 5.66 18.35.5 12 .5Z"/>
+            </svg>
+          </a>
+          <a class="brand-social icon-resume" href="../resume.pdf" aria-label="Resume">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 2.5h7.59L19.5 7.41V20a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 20V4A1.5 1.5 0 0 1 7 2.5Zm7 1.5v3.5h3.5L14 4Zm-5 8h6v1.5H9V12Zm0 3h6v1.5H9V15Zm0-6h3.5v1.5H9V9Z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a class="topbar-button" href="../index.html#top">Home</a>
+        <a class="topbar-button" href="../index.html#about-me">About Me</a>
+        <a class="topbar-button" href="../index.html#projects">Projects</a>
+        <a class="topbar-button" href="../index.html#writeups">Writeups</a>
+        <a class="topbar-button" href="../index.html#experience">Experience</a>
+        <a class="topbar-button" href="../index.html#contact">Connect</a>
+      </div>
+    </nav>
+
+    <section class="writeup-page-hero">
+      <p class="eyebrow">Workflow Optimization</p>
+      <h1>Provisioning Concurrency Analysis</h1>
+      <p class="hero-note hero-gallery-text">
+        Analyzed a laptop provisioning workflow to compare current throughput limits against a higher-concurrency model using existing KVM infrastructure.
+      </p>
+    </section>
+
+    <section class="writeup-page-layout">
+      <article class="writeup-page-panel">
+        <p class="section-label">Writeup</p>
+        <div class="about-copy">
+          <p>
+            I created this analysis after a workflow change moved laptop provisioning away from a KVM-based parallel process and into a more sequential model. Under the new rule, laptops could not sit idle between active steps. In practice, this meant technicians had to immediately progress each device through setup and closeout rather than stage multiple laptops and manage them in parallel.
+          </p>
+          <p>
+            To understand the impact, I broke the workflow into three stages: setup and install preparation, passive installation, and final checks and closeout. I then collected real timing data across multiple cycles to estimate average stage times and calculate the maximum achievable output under the new constraint.
+          </p>
+          <p>
+            The analysis showed that the bottleneck was the workflow itself, not technician effort. Because setup and closeout had to happen immediately, the process limited how much passive install time could be overlapped. Under that model, maximum output was about 5 laptops per hour.
+          </p>
+          <div class="writeup-figure-grid">
+            <figure class="writeup-figure">
+              <img src="../images/mac-schedule.png" alt="Schedule diagram for the macOS provisioning workflow">
+              <figcaption>macOS sequential workflow: 37 minutes / 3 laptops = ~5 laptops/hour</figcaption>
+            </figure>
+            <figure class="writeup-figure">
+              <img src="../images/windows-schedule.png" alt="Schedule diagram for the Windows provisioning workflow">
+              <figcaption>Windows sequential workflow: 25 minutes / 2 laptops = ~5 laptops/hour</figcaption>
+            </figure>
+          </div>
+          <p>
+            I then compared that against the original KVM-based workflow, where a technician could stage and control up to 8 laptops at once and use existing KVM stations to overlap setup, installation, and closeout across multiple devices. Using the same process stages, that model supported roughly 15 laptops per hour without requiring new equipment.
+          </p>
+          <figure class="writeup-figure writeup-figure-wide">
+            <img src="../images/kvm-schedule.png" alt="Schedule diagram for the KVM-based parallel provisioning workflow">
+            <figcaption>KVM-based parallel workflow: 68 minutes / 16 laptops = ~15 laptops/hour</figcaption>
+          </figure>
+          <p>
+            I shared the findings with my supervisor, their leadership chain, and Meta stakeholders, including supply chain analysts. The analysis helped show that the drop in output was caused by system design rather than technician performance, and the workflow eventually returned to the KVM-based model.
+          </p>
+          <p>
+            This project reflects the kind of engineering work I enjoy most: analyzing real-world systems, identifying bottlenecks, and using data to improve throughput and resource utilization.
+          </p>
+        </div>
+      </article>
+
+      <article class="writeup-page-panel writeup-page-panel-alt">
+        <p class="section-label">Key Takeaways</p>
+        <ul class="writeup-outline">
+          <li>Measured throughput under the sequential model was about 5 laptops per hour.</li>
+          <li>The KVM-based parallel model supported roughly 15 laptops per hour using existing equipment.</li>
+          <li>The limiting factor was workflow design, not technician performance.</li>
+          <li>Breaking work into active and passive stages made the bottleneck easier to explain.</li>
+          <li>The findings were communicated widely across operations leadership and Meta stakeholders to support a return to the KVM-based model.</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
